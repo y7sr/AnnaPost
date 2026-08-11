@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Comment {{ comment.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Comment {{ comment.id }}</h2>
+    
+    <dl class="comment-details">
+        <div class="detail-row">
+            <dt>Post ID:</dt>
+            <dd>{{ comment.post_id }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Account ID:</dt>
+            <dd>{{ comment.account_id }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Instagram Comment ID:</dt>
+            <dd><code>{{ comment.instagram_comment_id }}</code></dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Parent Comment ID:</dt>
+            <dd>{{ comment.parent_instagram_comment_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Username:</dt>
+            <dd>{{ comment.username or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Instagram User ID:</dt>
+            <dd>{{ comment.instagram_user_id_if_available or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Text:</dt>
+            <dd>{{ comment.text or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Like Count:</dt>
+            <dd>{{ comment.like_count_if_available or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Is Reply:</dt>
+            <dd>{% if comment.is_reply %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Is Hidden:</dt>
+            <dd>{% if comment.is_hidden %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Is Deleted Remote:</dt>
+            <dd>{% if comment.is_deleted_remote %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Created At (Remote):</dt>
+            <dd class="timestamp">{{ comment.created_at_remote|datetime("Y-m-d H:i:s") if comment.created_at_remote else '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Fetched At:</dt>
+            <dd class="timestamp">{{ comment.fetched_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Updated At:</dt>
+            <dd class="timestamp">{{ comment.updated_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        {% if comment.raw_json %}
+        <div class="detail-row">
+            <dt>Raw JSON:</dt>
+            <dd><pre>{{ comment.raw_json|tojson(indent=2) }}</pre></dd>
+        </div>
+        {% endif %}
+    </dl>
+    
+    <div class="actions">
+        <a href="/admin/comments/" class="button secondary">Back to Comments</a>
+        <a href="/admin/comments/{{ comment.id }}/reply/" class="button">Reply to Comment</a>
+    </div>
+</div>
+
+<style>
+.comment-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 0.5rem;
+}
+
+.detail-row dt {
+    font-weight: 500;
+    color: #666;
+}
+
+.detail-row dd {
+    margin-left: 0;
+}
+
+.detail-row code {
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+
+.detail-row pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

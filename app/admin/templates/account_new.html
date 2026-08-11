@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}New Account - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>New Instagram Account</h2>
+    
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    
+    <form action="/admin/accounts/" method="post">
+        <div class="form-group">
+            <label for="name">Account Name *</label>
+            <input type="text" id="name" name="name" required value="{{ account.name if account else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="instagram_user_id">Instagram User ID</label>
+            <input type="text" id="instagram_user_id" name="instagram_user_id" value="{{ account.instagram_user_id if account else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="access_token_ref">Access Token Reference</label>
+            <input type="text" id="access_token_ref" name="access_token_ref" value="{{ account.access_token_ref if account else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_default" value="true" {% if account and account.is_default %}checked{% endif %}>
+                Set as default account
+            </label>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="enabled" value="true" {% if account is none or account.enabled %}checked{% endif %}>
+                Enabled
+            </label>
+        </div>
+        
+        <div class="actions">
+            <button type="submit">Create Account</button>
+            <a href="/admin/accounts/" class="button secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

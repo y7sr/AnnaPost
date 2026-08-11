@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Event {{ event.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Event {{ event.id }}</h2>
+    
+    <dl class="event-details">
+        <div class="detail-row">
+            <dt>Event Type:</dt>
+            <dd>{{ event.event_type.value }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Account ID:</dt>
+            <dd>{{ event.account_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Post ID:</dt>
+            <dd>{{ event.post_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Job ID:</dt>
+            <dd>{{ event.job_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Created:</dt>
+            <dd class="timestamp">{{ event.created_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        {% if event.payload_json %}
+        <div class="detail-row">
+            <dt>Payload:</dt>
+            <dd><pre>{{ event.payload_json|tojson(indent=2) }}</pre></dd>
+        </div>
+        {% endif %}
+    </dl>
+    
+    <div class="actions">
+        <a href="/admin/events/" class="button secondary">Back to Events</a>
+    </div>
+</div>
+
+<style>
+.event-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 0.5rem;
+}
+
+.detail-row dt {
+    font-weight: 500;
+    color: #666;
+}
+
+.detail-row dd {
+    margin-left: 0;
+}
+
+.detail-row pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

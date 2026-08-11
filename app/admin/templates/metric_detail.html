@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Metric {{ metric.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Metric {{ metric.id }}</h2>
+    
+    <dl class="metric-details">
+        <div class="detail-row">
+            <dt>Post ID:</dt>
+            <dd>{{ metric.post_id }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Captured At:</dt>
+            <dd class="timestamp">{{ metric.captured_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        <h3>View/Reach Metrics</h3>
+        <div class="detail-row">
+            <dt>Views:</dt>
+            <dd>{{ metric.views if metric.views is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Reach:</dt>
+            <dd>{{ metric.reach if metric.reach is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Plays:</dt>
+            <dd>{{ metric.plays if metric.plays is not none else "-" }}</dd>
+        </div>
+        
+        <h3>Watch Time Metrics</h3>
+        <div class="detail-row">
+            <dt>Average Watch Time (ms):</dt>
+            <dd>{{ metric.avg_watch_time_ms if metric.avg_watch_time_ms is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Total Watch Time (ms):</dt>
+            <dd>{{ metric.total_watch_time_ms if metric.total_watch_time_ms is not none else "-" }}</dd>
+        </div>
+        
+        <h3>Engagement Metrics</h3>
+        <div class="detail-row">
+            <dt>Likes:</dt>
+            <dd>{{ metric.likes if metric.likes is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Comments:</dt>
+            <dd>{{ metric.comments if metric.comments is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Saved:</dt>
+            <dd>{{ metric.saved if metric.saved is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Shares:</dt>
+            <dd>{{ metric.shares if metric.shares is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Total Interactions:</dt>
+            <dd>{{ metric.total_interactions if metric.total_interactions is not none else "-" }}</dd>
+        </div>
+        
+        <h3>Profile Activity Metrics</h3>
+        <div class="detail-row">
+            <dt>Profile Activity:</dt>
+            <dd>{{ metric.profile_activity if metric.profile_activity is not none else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Follows:</dt>
+            <dd>{{ metric.follows if metric.follows is not none else "-" }}</dd>
+        </div>
+        
+        {% if metric.raw_metrics_json %}
+        <div class="detail-row">
+            <dt>Raw Metrics JSON:</dt>
+            <dd><pre>{{ metric.raw_metrics_json|tojson(indent=2) }}</pre></dd>
+        </div>
+        {% endif %}
+    </dl>
+    
+    <p><small>Note: "-" indicates NULL (unavailable), "0" indicates zero</small></p>
+    
+    <div class="actions">
+        <a href="/admin/metrics/" class="button secondary">Back to Metrics</a>
+        <a href="/admin/metrics/post/{{ metric.post_id }}/" class="button secondary">View All Metrics for Post {{ metric.post_id }}</a>
+    </div>
+</div>
+
+<style>
+.metric-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 0.5rem;
+}
+
+.detail-row dt {
+    font-weight: 500;
+    color: #666;
+}
+
+.detail-row dd {
+    margin-left: 0;
+}
+
+.detail-row pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+
+.metric-details h3 {
+    grid-column: 1 / -1;
+    margin: 1rem 0 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    color: #2c3e50;
+}
+</style>
+{% endblock %}

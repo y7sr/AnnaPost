@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AnnaPost Admin{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="/admin/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>AnnaPost Admin</h1>
+        <nav>
+            <a href="/admin/" {% if request.url.path == '/admin/' %}class="active"{% endif %}>Dashboard</a>
+            <a href="/admin/accounts/" {% if '/admin/accounts' in request.url.path %}class="active"{% endif %}>Accounts</a>
+            <a href="/admin/posts/" {% if '/admin/posts' in request.url.path %}class="active"{% endif %}>Posts</a>
+            <a href="/admin/jobs/" {% if '/admin/jobs' in request.url.path %}class="active"{% endif %}>Jobs</a>
+            <a href="/admin/events/" {% if '/admin/events' in request.url.path %}class="active"{% endif %}>Events</a>
+            <a href="/admin/metrics/" {% if '/admin/metrics' in request.url.path %}class="active"{% endif %}>Metrics</a>
+            <a href="/admin/comments/" {% if '/admin/comments' in request.url.path %}class="active"{% endif %}>Comments</a>
+        </nav>
+    </header>
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer>
+        <p>AnnaPost Admin Dashboard</p>
+    </footer>
+</body>
+</html>

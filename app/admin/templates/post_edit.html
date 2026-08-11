@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Post - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Edit Post</h2>
+    
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    
+    <form action="/admin/posts/{{ post.id }}/edit/" method="post">
+        <div class="form-group">
+            <label for="account_id">Account</label>
+            <select id="account_id" name="account_id" disabled>
+                {% for account in accounts %}
+                <option value="{{ account.id }}" {% if post.account_id == account.id %}selected{% endif %}>{{ account.name }}</option>
+                {% endfor %}
+            </select>
+            <small>Account cannot be changed after creation</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="media_type">Media Type</label>
+            <select id="media_type" name="media_type" disabled>
+                <option value="image" {% if post.media_type == 'image' %}selected{% endif %}>Image</option>
+                <option value="reel" {% if post.media_type == 'reel' %}selected{% endif %}>Reel</option>
+                <option value="carousel" {% if post.media_type == 'carousel' %}selected{% endif %}>Carousel</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="media_source_type">Media Source Type</label>
+            <select id="media_source_type" name="media_source_type" disabled>
+                <option value="url" {% if post.media_source_type == 'url' %}selected{% endif %}>URL</option>
+                <option value="local_file" {% if post.media_source_type == 'local_file' %}selected{% endif %}>Local File</option>
+                <option value="object_storage" {% if post.media_source_type == 'object_storage' %}selected{% endif %}>Object Storage</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="media_source">Media Source *</label>
+            <input type="text" id="media_source" name="media_source" required value="{{ post.media_source }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="caption">Caption</label>
+            <textarea id="caption" name="caption">{{ post.caption or '' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Current Status:</label>
+            <span class="status {{ post.status.value }}">{{ post.status.value }}</span>
+        </div>
+        
+        {% if post.last_error %}
+        <div class="form-group">
+            <label>Last Error:</label>
+            <div class="error">{{ post.last_error }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="actions">
+            <button type="submit">Update Post</button>
+            <a href="/admin/posts/" class="button secondary">Cancel</a>
+        </div>
+    </form>
+    
+    <hr style="margin: 2rem 0;">
+    
+    <h3>Post Actions</h3>
+    <div class="actions">
+        {% if post.status in ['draft', 'ready', 'scheduled', 'failed'] %}
+        <form action="/admin/posts/{{ post.id }}/publish/" method="post">
+            <button type="submit">Publish Now</button>
+        </form>
+        {% endif %}
+        
+        {% if post.status in ['draft', 'ready'] %}
+        <form action="/admin/posts/{{ post.id }}/schedule/" method="post" class="inline-form">
+            <label for="scheduled_at_action">Schedule for:</label>
+            <input type="datetime-local" id="scheduled_at_action" name="scheduled_at" required>
+            <button type="submit">Schedule</button>
+        </form>
+        {% endif %}
+        
+        {% if post.status in ['draft', 'failed'] %}
+        <form action="/admin/posts/{{ post.id }}/cancel/" method="post" onsubmit="return confirm('Are you sure you want to cancel this post?')">
+            <button type="submit" class="danger">Cancel</button>
+        </form>
+        {% endif %}
+        
+        {% if post.status in ['published', 'failed'] %}
+        <form action="/admin/posts/{{ post.id }}/delete/" method="post" onsubmit="return confirm('Are you sure you want to delete this post? This will request soft deletion.')">
+            <button type="submit" class="danger">Soft Delete</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

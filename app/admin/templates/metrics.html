@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Metrics - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Instagram Post Metrics</h2>
+    
+    <div class="filter-bar">
+        <form method="get" action="/admin/metrics/" class="inline-form">
+            <label for="post_id">Post ID:</label>
+            <input type="number" id="post_id" name="post_id" value="{{ post_id_filter or '' }}">
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+    
+    {% if metrics %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Post ID</th>
+                <th>Captured At</th>
+                <th>Views</th>
+                <th>Reach</th>
+                <th>Likes</th>
+                <th>Comments</th>
+                <th>Saved</th>
+                <th>Shares</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for metric in metrics %}
+            <tr>
+                <td>{{ metric.id }}</td>
+                <td>{{ metric.post_id }}</td>
+                <td class="timestamp">{{ metric.captured_at|datetime("Y-m-d H:i") }}</td>
+                <td>{{ metric.views if metric.views is not none else '-' }}</td>
+                <td>{{ metric.reach if metric.reach is not none else '-' }}</td>
+                <td>{{ metric.likes if metric.likes is not none else '-' }}</td>
+                <td>{{ metric.comments if metric.comments is not none else '-' }}</td>
+                <td>{{ metric.saved if metric.saved is not none else '-' }}</td>
+                <td>{{ metric.shares if metric.shares is not none else '-' }}</td>
+                <td class="actions">
+                    <a href="/admin/metrics/{{ metric.id }}/" class="button secondary">View</a>
+                    {% if showing_all %}
+                    <a href="/admin/metrics/post/{{ metric.post_id }}/" class="button secondary">Post Metrics</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <p><small>Note: "-" indicates NULL (unavailable), "0" indicates zero</small></p>
+    {% else %}
+    <p class="empty-state">No metrics found.</p>
+    {% endif %}
+</div>
+{% endblock %}

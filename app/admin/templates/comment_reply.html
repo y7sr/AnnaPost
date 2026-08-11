@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Reply to Comment {{ comment.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Reply to Comment {{ comment.id }}</h2>
+    
+    <div class="original-comment">
+        <h3>Original Comment</h3>
+        <p><strong>From:</strong> {{ comment.username or comment.instagram_user_id_if_available or 'Unknown' }}</p>
+        <p><strong>Text:</strong> {{ comment.text or '-' }}</p>
+        <p><strong>Post:</strong> {{ comment.post_id }}</p>
+        <p class="timestamp"><small>Posted: {{ comment.created_at_remote|datetime("Y-m-d H:i") if comment.created_at_remote else 'Unknown' }}</small></p>
+    </div>
+    
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    
+    {% if success %}
+    <div class="success">{{ success }}</div>
+    {% endif %}
+    
+    <form action="/admin/comments/{{ comment.id }}/reply/" method="post">
+        <div class="form-group">
+            <label for="text">Your Reply *</label>
+            <textarea id="text" name="text" required></textarea>
+            <small>This will create a reply_comment job for asynchronous processing.</small>
+        </div>
+        
+        <div class="actions">
+            <button type="submit">Submit Reply</button>
+            <a href="/admin/comments/" class="button secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.original-comment {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}

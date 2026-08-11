@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Instagram Accounts</h2>
+    
+    <div class="filter-bar">
+        <a href="/admin/accounts/new/" class="button">+ Add Account</a>
+    </div>
+    
+    {% if success %}
+    <div class="success">{{ success }}</div>
+    {% endif %}
+    
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+    
+    {% if accounts %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>User ID</th>
+                <th>Default</th>
+                <th>Enabled</th>
+                <th>Last Success</th>
+                <th>Last Error</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td>{{ account.id }}</td>
+                <td><a href="/admin/accounts/{{ account.id }}/">{{ account.name }}</a></td>
+                <td>{{ account.instagram_user_id or "-" }}</td>
+                <td>{% if account.is_default %}<span class="status published">Yes</span>{% else %}No{% endif %}</td>
+                <td>{% if account.enabled %}<span class="status published">Yes</span>{% else %}<span class="status failed">No</span>{% endif %}</td>
+                <td class="timestamp">{{ account.last_successful_api_call_at|datetime("Y-m-d H:i") if account.last_successful_api_call_at else "-" }}</td>
+                <td class="timestamp">{{ account.last_error_at|datetime("Y-m-d H:i") if account.last_error_at else "-" }}</td>
+                <td class="actions">
+                    <a href="/admin/accounts/{{ account.id }}/edit/" class="button secondary">Edit</a>
+                    {% if not account.is_default or count > 1 %}
+                    <form action="/admin/accounts/{{ account.id }}/delete/" method="post" onsubmit="return confirm('Are you sure?')">
+                        <button type="submit" class="danger">Delete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No accounts yet. <a href="/admin/accounts/new/">Add your first account</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

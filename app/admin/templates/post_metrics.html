@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Metrics for Post {{ post.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Metrics for Post {{ post.id }}</h2>
+    
+    <div class="post-info">
+        <p><strong>Caption:</strong> {{ post.caption or '-' }}</p>
+        <p><strong>Status:</strong> <span class="status {{ post.status.value }}">{{ post.status.value }}</span></p>
+        <p><strong>Published:</strong> {{ post.published_at|datetime("Y-m-d H:i:s") if post.published_at else '-' }}</p>
+    </div>
+    
+    {% if metrics %}
+    <h3>Metric History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Captured At</th>
+                <th>Views</th>
+                <th>Reach</th>
+                <th>Likes</th>
+                <th>Comments</th>
+                <th>Saved</th>
+                <th>Shares</th>
+                <th>Total Interactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for metric in metrics %}
+            <tr>
+                <td class="timestamp">{{ metric.captured_at|datetime("Y-m-d H:i") }}</td>
+                <td>{{ metric.views if metric.views is not none else '-' }}</td>
+                <td>{{ metric.reach if metric.reach is not none else '-' }}</td>
+                <td>{{ metric.likes if metric.likes is not none else '-' }}</td>
+                <td>{{ metric.comments if metric.comments is not none else '-' }}</td>
+                <td>{{ metric.saved if metric.saved is not none else '-' }}</td>
+                <td>{{ metric.shares if metric.shares is not none else '-' }}</td>
+                <td>{{ metric.total_interactions if metric.total_interactions is not none else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <p><small>Note: "-" indicates NULL (unavailable), "0" indicates zero</small></p>
+    
+    <h3>Simple Chart</h3>
+    <div class="sparklines">
+        {% if metrics %}
+        <svg viewBox="0 0 800 200" style="width: 100%; height: 100%;">
+            <polyline
+                fill="none"
+                stroke="#3498db"
+                stroke-width="2"
+                points="
+                    {% for point in chart_points %}
+                    {{ point.x }},{{ point.views_y if point.views_known else 200 }}
+                    {% endfor %}
+                " />
+            <polyline
+                fill="none"
+                stroke="#e74c3c"
+                stroke-width="2"
+                points="
+                    {% for point in chart_points %}
+                    {{ point.x }},{{ point.likes_y if point.likes_known else 200 }}
+                    {% endfor %}
+                " />
+        </svg>
+        <div style="text-align: center; margin-top: 0.5rem;">
+            <span style="color: #3498db;">Views</span> | 
+            <span style="color: #e74c3c;">Likes</span>
+        </div>
+        {% else %}
+        <p>No metric data available for chart</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="empty-state">No metrics found for this post.</p>
+    {% endif %}
+    
+    <div class="actions">
+        <a href="/admin/metrics/" class="button secondary">Back to All Metrics</a>
+        <a href="/admin/posts/{{ post.id }}/" class="button secondary">View Post Details</a>
+    </div>
+</div>
+
+<style>
+.post-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+sparklines svg {
+    width: 100%;
+    height: 100%;
+    min-height: 100px;
+}
+</style>
+{% endblock %}

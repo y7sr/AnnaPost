@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Post {{ post.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Post {{ post.id }}</h2>
+    
+    <dl class="post-details">
+        <div class="detail-row">
+            <dt>Account ID:</dt>
+            <dd>{{ post.account_id }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Media Type:</dt>
+            <dd>{{ post.media_type }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Media Source Type:</dt>
+            <dd>{{ post.media_source_type }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Media Source:</dt>
+            <dd><code>{{ post.media_source }}</code></dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Caption:</dt>
+            <dd>{{ post.caption or "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Status:</dt>
+            <dd><span class="status {{ post.status.value }}">{{ post.status.value }}</span></dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Scheduled At:</dt>
+            <dd class="timestamp">{{ post.scheduled_at|datetime("Y-m-d H:i:s") if post.scheduled_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Published At:</dt>
+            <dd class="timestamp">{{ post.published_at|datetime("Y-m-d H:i:s") if post.published_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Instagram Media ID:</dt>
+            <dd>{{ post.instagram_media_id or "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Instagram Container ID:</dt>
+            <dd>{{ post.instagram_container_id or "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Instagram Permalink:</dt>
+            <dd><a href="{{ post.instagram_permalink }}" target="_blank" rel="noopener">{{ post.instagram_permalink or "-" }}</a></dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Soft Deleted:</dt>
+            <dd>{% if post.soft_deleted %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Delete Requested At:</dt>
+            <dd class="timestamp">{{ post.delete_requested_at|datetime("Y-m-d H:i:s") if post.delete_requested_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Publish Attempt Count:</dt>
+            <dd>{{ post.publish_attempt_count }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Last Publish Attempt At:</dt>
+            <dd class="timestamp">{{ post.last_publish_attempt_at|datetime("Y-m-d H:i:s") if post.last_publish_attempt_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Last Synced At:</dt>
+            <dd class="timestamp">{{ post.last_synced_at|datetime("Y-m-d H:i:s") if post.last_synced_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Next Sync At:</dt>
+            <dd class="timestamp">{{ post.next_sync_at|datetime("Y-m-d H:i:s") if post.next_sync_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Caption Sync Status:</dt>
+            <dd>{{ post.caption_sync_status }}</dd>
+        </div>
+        
+        {% if post.remote_caption_last_known %}
+        <div class="detail-row">
+            <dt>Remote Caption:</dt>
+            <dd>{{ post.remote_caption_last_known }}</dd>
+        </div>
+        {% endif %}
+        
+        {% if post.last_error %}
+        <div class="detail-row">
+            <dt>Last Error:</dt>
+            <dd class="error">{{ post.last_error }}</dd>
+        </div>
+        {% endif %}
+        
+        <div class="detail-row">
+            <dt>Created:</dt>
+            <dd class="timestamp">{{ post.created_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Updated:</dt>
+            <dd class="timestamp">{{ post.updated_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+    </dl>
+    
+    <div class="actions">
+        <a href="/admin/posts/" class="button secondary">Back to Posts</a>
+        {% if post.status in ['draft', 'ready', 'scheduled', 'failed'] %}
+        <a href="/admin/posts/{{ post.id }}/edit/" class="button">Edit</a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.post-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 0.5rem;
+}
+
+.detail-row dt {
+    font-weight: 500;
+    color: #666;
+}
+
+.detail-row dd {
+    margin-left: 0;
+    word-break: break-all;
+}
+
+.detail-row code {
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

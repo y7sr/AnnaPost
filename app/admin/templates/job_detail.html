@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Job {{ job.id }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Job {{ job.id }}</h2>
+    
+    <dl class="job-details">
+        <div class="detail-row">
+            <dt>Job Type:</dt>
+            <dd>{{ job.job_type.value }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Status:</dt>
+            <dd><span class="status {{ job.status.value }}">{{ job.status.value }}</span></dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Account ID:</dt>
+            <dd>{{ job.account_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Post ID:</dt>
+            <dd>{{ job.post_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Comment ID:</dt>
+            <dd>{{ job.comment_id or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Attempts:</dt>
+            <dd>{{ job.attempts }} / {{ job.max_attempts }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Run After:</dt>
+            <dd class="timestamp">{{ job.run_after|datetime("Y-m-d H:i:s") if job.run_after else '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Locked At:</dt>
+            <dd class="timestamp">{{ job.locked_at|datetime("Y-m-d H:i:s") if job.locked_at else '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Locked By:</dt>
+            <dd>{{ job.locked_by or '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Started At:</dt>
+            <dd class="timestamp">{{ job.started_at|datetime("Y-m-d H:i:s") if job.started_at else '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Completed At:</dt>
+            <dd class="timestamp">{{ job.completed_at|datetime("Y-m-d H:i:s") if job.completed_at else '-' }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Created:</dt>
+            <dd class="timestamp">{{ job.created_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        {% if job.payload_json %}
+        <div class="detail-row">
+            <dt>Payload:</dt>
+            <dd><pre>{{ job.payload_json|tojson(indent=2) }}</pre></dd>
+        </div>
+        {% endif %}
+        
+        {% if job.last_error %}
+        <div class="detail-row">
+            <dt>Last Error:</dt>
+            <dd class="error">{{ job.last_error }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+    
+    <div class="actions">
+        <a href="/admin/jobs/" class="button secondary">Back to Jobs</a>
+        {% if job.status == 'failed' %}
+        <form action="/admin/jobs/{{ job.id }}/retry/" method="post" onsubmit="return confirm('Retry this job?')">
+            <button type="submit">Retry Job</button>
+        </form>
+        {% endif %}
+        {% if job.status == 'pending' %}
+        <form action="/admin/jobs/{{ job.id }}/cancel/" method="post" onsubmit="return confirm('Cancel this job?')">
+            <button type="submit" class="danger">Cancel Job</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.job-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 0.5rem;
+}
+
+.detail-row dt {
+    font-weight: 500;
+    color: #666;
+}
+
+.detail-row dd {
+    margin-left: 0;
+}
+
+.detail-row pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

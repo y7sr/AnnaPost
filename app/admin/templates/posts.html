@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Posts - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Instagram Posts</h2>
+    
+    <div class="filter-bar">
+        <a href="/admin/posts/new/" class="button">+ New Post</a>
+        
+        <form method="get" action="/admin/posts/" class="inline-form">
+            <label for="status">Status:</label>
+            <select id="status" name="status">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                {% for status_value in status_values %}
+                <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>{{ status_value }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+    
+    {% if posts %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Account</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Caption</th>
+                <th>Scheduled</th>
+                <th>Published</th>
+                <th>Attempts</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="post-table-body" hx-get="/admin/posts/?status={{ status_filter }}" hx-trigger="every 5s" hx-select="#post-table-body" hx-target="this" hx-swap="outerHTML">
+            {% for post in posts %}
+            <tr>
+                <td>{{ post.id }}</td>
+                <td>{{ post.account_id }}</td>
+                <td>{{ post.media_type }}</td>
+                <td><span class="status {{ post.status.value }}">{{ post.status.value }}</span></td>
+                <td>{{ post.caption[:50] if post.caption else '-' }}</td>
+                <td class="timestamp">{{ post.scheduled_at|datetime("Y-m-d H:i") if post.scheduled_at else '-' }}</td>
+                <td class="timestamp">{{ post.published_at|datetime("Y-m-d H:i") if post.published_at else '-' }}</td>
+                <td>{{ post.publish_attempt_count }}</td>
+                <td class="actions">
+                    <a href="/admin/posts/{{ post.id }}/" class="button secondary">View</a>
+                    {% if post.status in ['draft', 'ready', 'scheduled', 'failed'] %}
+                    <a href="/admin/posts/{{ post.id }}/edit/" class="button secondary">Edit</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No posts yet. <a href="/admin/posts/new/">Create your first post</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

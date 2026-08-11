@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Instagram Jobs</h2>
+    
+    <div class="filter-bar">
+        <form method="get" action="/admin/jobs/" class="inline-form">
+            <label for="job_type">Job Type:</label>
+            <select id="job_type" name="job_type">
+                <option value="all" {% if job_type_filter == 'all' %}selected{% endif %}>All</option>
+                {% for jt in job_type_values %}
+                <option value="{{ jt }}" {% if job_type_filter == jt %}selected{% endif %}>{{ jt }}</option>
+                {% endfor %}
+            </select>
+            
+            <label for="status">Status:</label>
+            <select id="status" name="status">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                {% for sv in status_values %}
+                <option value="{{ sv }}" {% if status_filter == sv %}selected{% endif %}>{{ sv }}</option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+    
+    {% if jobs %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Account</th>
+                <th>Post</th>
+                <th>Comment</th>
+                <th>Attempts</th>
+                <th>Max Attempts</th>
+                <th>Run After</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="job-table-body" hx-get="/admin/jobs/?job_type={{ job_type_filter }}&status={{ status_filter }}" hx-trigger="every 5s" hx-select="#job-table-body" hx-target="this" hx-swap="outerHTML">
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job.id }}</td>
+                <td>{{ job.job_type.value }}</td>
+                <td><span class="status {{ job.status.value }}">{{ job.status.value }}</span></td>
+                <td>{{ job.account_id or '-' }}</td>
+                <td>{{ job.post_id or '-' }}</td>
+                <td>{{ job.comment_id or '-' }}</td>
+                <td>{{ job.attempts }}</td>
+                <td>{{ job.max_attempts }}</td>
+                <td class="timestamp">{{ job.run_after|datetime("Y-m-d H:i") if job.run_after else '-' }}</td>
+                <td class="timestamp">{{ job.created_at|datetime("Y-m-d H:i") }}</td>
+                <td class="actions">
+                    <a href="/admin/jobs/{{ job.id }}/" class="button secondary">View</a>
+                    {% if job.status == 'failed' %}
+                    <form action="/admin/jobs/{{ job.id }}/retry/" method="post" onsubmit="return confirm('Retry this job?')">
+                        <button type="submit">Retry</button>
+                    </form>
+                    {% endif %}
+                    {% if job.status == 'pending' %}
+                    <form action="/admin/jobs/{{ job.id }}/cancel/" method="post" onsubmit="return confirm('Cancel this job?')">
+                        <button type="submit" class="danger">Cancel</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No jobs found.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ account.name }} - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ account.name }}</h2>
+    
+    <dl class="account-details">
+        <div class="detail-row">
+            <dt>Account ID:</dt>
+            <dd>{{ account.id }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Instagram User ID:</dt>
+            <dd>{{ account.instagram_user_id or "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Default Account:</dt>
+            <dd>{% if account.is_default %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Enabled:</dt>
+            <dd>{% if account.enabled %}Yes{% else %}No{% endif %}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Created:</dt>
+            <dd class="timestamp">{{ account.created_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Last Updated:</dt>
+            <dd class="timestamp">{{ account.updated_at|datetime("Y-m-d H:i:s") }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Last Successful API Call:</dt>
+            <dd class="timestamp">{{ account.last_successful_api_call_at|datetime("Y-m-d H:i:s") if account.last_successful_api_call_at else "-" }}</dd>
+        </div>
+        
+        <div class="detail-row">
+            <dt>Last Error:</dt>
+            <dd class="timestamp">{{ account.last_error_at|datetime("Y-m-d H:i:s") if account.last_error_at else "-" }}</dd>
+        </div>
+        
+        {% if account.last_error %}
+        <div class="detail-row">
+            <dt>Last Error Message:</dt>
+            <dd>{{ account.last_error }}</dd>
+        </div>
+        {% endif %}
+    </dl>
+    
+    <div class="actions">
+        <a href="/admin/accounts/{{ account.id }}/edit/" class="button">Edit</a>
+        <a href="/admin/accounts/" class="button secondary">Back to Accounts</a>
+    </div>
+</div>
+
+<style>
+.account-details {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.detail-row {
+    margin-bottom: 0.5rem;
+}
+
+.detail-row dt {
+    font-weight: 500;
+    color: #666;
+}
+
+.detail-row dd {
+    margin-left: 0;
+}
+</style>
+{% endblock %}

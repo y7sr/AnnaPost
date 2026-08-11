@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Comments - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Instagram Comments</h2>
+    
+    <div class="filter-bar">
+        <form method="get" action="/admin/comments/" class="inline-form">
+            <label for="post_id">Post ID:</label>
+            <input type="number" id="post_id" name="post_id" value="{{ post_id_filter or '' }}">
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+    
+    {% if comments %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Post ID</th>
+                <th>Author</th>
+                <th>Text</th>
+                <th>Likes</th>
+                <th>Is Reply</th>
+                <th>Created</th>
+                <th>Fetched</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comment in comments %}
+            <tr>
+                <td>{{ comment.id }}</td>
+                <td>{{ comment.post_id }}</td>
+                <td>{{ comment.username or comment.instagram_user_id_if_available or '-' }}</td>
+                <td>{{ comment.text[:50] if comment.text else '-' }}</td>
+                <td>{{ comment.like_count_if_available or '-' }}</td>
+                <td>{% if comment.is_reply %}Yes{% else %}No{% endif %}</td>
+                <td class="timestamp">{{ comment.created_at_remote|datetime("Y-m-d H:i") if comment.created_at_remote else '-' }}</td>
+                <td class="timestamp">{{ comment.fetched_at|datetime("Y-m-d H:i") }}</td>
+                <td class="actions">
+                    <a href="/admin/comments/{{ comment.id }}/" class="button secondary">View</a>
+                    <a href="/admin/comments/{{ comment.id }}/reply/" class="button secondary">Reply</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No comments found.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Outgoing Queue</h2>
+    {% if outgoing %}
+    <table>
+        <thead><tr><th>Job</th><th>Type</th><th>Post</th><th>Text</th><th>Status</th><th>Error</th></tr></thead>
+        <tbody>
+            {% for item in outgoing %}
+            <tr>
+                <td><a href="/admin/jobs/{{ item.id }}/">{{ item.id }}</a></td>
+                <td>{{ item.type }}</td><td>{{ item.post_id or '-' }}</td>
+                <td>{{ item.text[:50] if item.text else '-' }}</td>
+                <td><span class="status {{ item.status }}">{{ item.status }}</span></td>
+                <td>{{ item.last_error or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No outgoing comments queued.</p>
+    {% endif %}
+</div>
+{% endblock %}

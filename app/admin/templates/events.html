@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Events - AnnaPost Admin{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Instagram Events</h2>
+    
+    <div class="filter-bar">
+        <form method="get" action="/admin/events/" class="inline-form">
+            <label for="account_id">Account ID:</label>
+            <input type="number" id="account_id" name="account_id" value="{{ account_id_filter or '' }}">
+            
+            <label for="post_id">Post ID:</label>
+            <input type="number" id="post_id" name="post_id" value="{{ post_id_filter or '' }}">
+            
+            <button type="submit">Filter</button>
+        </form>
+    </div>
+    
+    {% if events %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Account</th>
+                <th>Post</th>
+                <th>Job</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.id }}</td>
+                <td>{{ event.event_type.value }}</td>
+                <td>{{ event.account_id or '-' }}</td>
+                <td>{{ event.post_id or '-' }}</td>
+                <td>{{ event.job_id or '-' }}</td>
+                <td class="timestamp">{{ event.created_at|datetime("Y-m-d H:i:s") }}</td>
+                <td class="actions">
+                    <a href="/admin/events/{{ event.id }}/" class="button secondary">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No events found.</p>
+    {% endif %}
+</div>
+{% endblock %}
