@@ -62,7 +62,7 @@ python -m app.cli.main accounts list
 python -m app.cli.main posts list
 python -m app.cli.main runner publish
 
-# Real Instagram write: local image via an ephemeral TryCloudflare URL.
+# Real Instagram write: local image via an ephemeral ngrok HTTPS URL.
 # Requires a configured account and explicit --confirm.
 python -m app.cli.main posts publish-file ./image.jpg --caption "Caption" --confirm
 ```
@@ -108,8 +108,8 @@ External Producer -> FastAPI -> Database -> Runners -> InstagramClient -> Instag
 ### One-Shot Local Image Publishing
 
 `posts publish-file` is the sole local-file convenience path. It stages exactly
-one validated image through a loopback-only server and `cloudflared` Quick
-Tunnel, persists a normal URL-backed post, and calls
+one validated image through a loopback-only server and `ngrok`, persists a
+normal URL-backed post, and calls
 `app.runners.publish.run_job(job_id)` so unrelated pending work is untouched.
 The tunnel dies after the attempt; failures must not be retried later against
 that URL. Keep `--confirm` mandatory and never invoke it as a test or without

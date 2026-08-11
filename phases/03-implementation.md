@@ -229,7 +229,7 @@ Difficulty: normal engineering work — the hard decisions were already made in 
 - Reuses all existing services without duplication
 - Provides operational convenience for debugging and manual execution
 - `posts publish-file` stages one validated local image via a temporary
-  TryCloudflare URL, then uses `app.runners.publish.run_job(job_id)` to isolate
+  ngrok HTTPS URL, then uses `app.runners.publish.run_job(job_id)` to isolate
   the write to its own job. The URL is ephemeral, so a failed one-shot job is
   canceled rather than retried after teardown.
 
@@ -294,7 +294,7 @@ Difficulty: normal engineering work — the hard decisions were already made in 
 ### CLI Layer (`app/cli/`)
 - **main.py**: Full CLI with `argparse`, commands for accounts, posts, jobs, runners
 - **publish_file.py** / **media_staging.py**: One-shot local-image staging and
-  TryCloudflare lifecycle for `posts publish-file`
+  ngrok lifecycle for `posts publish-file`
 
 ### Database Layer (`app/db/`)
 - **models/**: Complete ORM models for all 7 core tables

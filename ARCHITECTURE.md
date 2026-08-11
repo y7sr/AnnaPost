@@ -520,7 +520,7 @@ image, not for the durable post scheduler:
 ```text
 validated image path
   → loopback-only SingleFileServer (one random route)
-  → cloudflared Quick Tunnel
+  → NgrokTunnel (one HTTPS tunnel for that loopback origin)
   → URL-backed InstagramPost + publish job
   → run_job(job_id)
   → JSON receipt

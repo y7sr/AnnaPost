@@ -1,4 +1,4 @@
-"""One-shot local-image publishing through TryCloudflare."""
+"""One-shot local-image publishing through ngrok."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cli.media_staging import (
     MediaStagingError,
-    QuickTunnel,
+    NgrokTunnel,
     SingleFileServer,
     require_image_file,
 )
@@ -50,7 +50,7 @@ async def publish_file(
     account_id: int | None,
     idempotency_key: str | None,
 ) -> dict[str, Any]:
-    """Publish one local image while its TryCloudflare URL remains alive.
+    """Publish one local image while its ngrok URL remains alive.
 
     The temporary URL deliberately dies when this operation finishes. Failed
     jobs are canceled rather than retried against a URL which no longer exists.
@@ -60,7 +60,7 @@ async def publish_file(
         account = await _get_publish_account(session, account_id)
 
     with SingleFileServer(path, content_type) as media_server:
-        tunnel = QuickTunnel(media_server.origin_url)
+        tunnel = NgrokTunnel(media_server.origin_url)
         try:
             public_origin = await tunnel.start()
             media_url = f"{public_origin}{media_server.route}"

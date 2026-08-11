@@ -21,6 +21,10 @@ async def execute_action(
     session: AsyncSession, job_id: int, client: InstagramClient | None = None
 ) -> bool:
     job = await session.get(InstagramJob, job_id)
+    # The action runner claims jobs with a bulk UPDATE in this same session.
+    # Refresh the identity-mapped row before checking its claimed status.
+    if job is not None:
+        await session.refresh(job)
     if not job or job.status is not JobStatus.RUNNING:
         return False
     post = await session.get(InstagramPost, job.post_id)

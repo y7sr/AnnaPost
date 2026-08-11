@@ -63,7 +63,7 @@ account.access_token = "actual-token-value"  # ❌ NEVER DO THIS
 ### Temporary Local Media Exposure
 
 `python -m app.cli.main posts publish-file ... --confirm` may expose one local
-image through a Cloudflare Quick Tunnel so Instagram can fetch it. The command
+image through an ngrok HTTPS tunnel so Instagram can fetch it. The command
 is constrained as follows:
 
 - It validates that the target is a regular image file before starting a server.
@@ -71,8 +71,9 @@ is constrained as follows:
   only the selected file via `GET` or `HEAD`; it offers no directory listing or
   arbitrary-path access.
 - The original filename is not included in the public URL.
-- `cloudflared` runs only for the publication attempt and is terminated during
-  cleanup, including failure paths.
+- The CLI starts an ngrok process only for the publication attempt, discovers
+  the HTTPS tunnel for its exact loopback origin through the local inspector,
+  and terminates that process during cleanup, including failure paths.
 - The command requires `--confirm`; it is an external, irreversible write.
 - Failed ephemeral publication jobs are canceled before teardown. They are not
   automatically retried after the temporary URL disappears.

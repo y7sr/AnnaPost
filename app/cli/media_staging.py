@@ -21,6 +21,7 @@ class MediaStagingError(RuntimeError):
 
 
 _QUICK_TUNNEL_URL = re.compile(r"https://[a-z0-9-]+\.trycloudflare\.com", re.IGNORECASE)
+_NGROK_API_URL = "http://127.0.0.1:4040/api/tunnels"
 
 
 def require_image_file(path_value: str) -> tuple[Path, str]:
@@ -165,6 +166,58 @@ class QuickTunnel:
                 await asyncio.sleep(0.5)
         await self.stop()
         raise MediaStagingError("TryCloudflare public URL did not become reachable")
+
+    async def stop(self) -> None:
+        if self.process is None or self.process.returncode is not None:
+            return
+        self.process.terminate()
+        try:
+            await asyncio.wait_for(self.process.wait(), timeout=10)
+        except TimeoutError:
+            self.process.kill()
+            await self.process.wait()
+
+
+class NgrokTunnel:
+    """Own one ngrok HTTP tunnel and discover only its HTTPS endpoint."""
+
+    def __init__(self, origin_url: str, *, startup_timeout_seconds: float = 30.0) -> None:
+        self.origin_url = origin_url
+        self.startup_timeout_seconds = startup_timeout_seconds
+        self.process: asyncio.subprocess.Process | None = None
+        self.public_origin: str | None = None
+
+    async def start(self) -> str:
+        self.process = await asyncio.create_subprocess_exec(
+            "ngrok",
+            "http",
+            self.origin_url,
+            "--log=stdout",
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        try:
+            async with asyncio.timeout(self.startup_timeout_seconds):
+                async with httpx.AsyncClient(timeout=5) as client:
+                    while True:
+                        try:
+                            tunnels = (await client.get(_NGROK_API_URL)).json().get("tunnels", [])
+                            for tunnel in tunnels:
+                                config = tunnel.get("config") or {}
+                                public_url = tunnel.get("public_url")
+                                if (
+                                    config.get("addr") == self.origin_url
+                                    and isinstance(public_url, str)
+                                    and public_url.startswith("https://")
+                                ):
+                                    self.public_origin = public_url
+                                    return public_url
+                        except (httpx.HTTPError, ValueError):
+                            pass
+                        await asyncio.sleep(0.25)
+        except TimeoutError as exc:
+            await self.stop()
+            raise MediaStagingError("Timed out waiting for the ngrok public URL") from exc
 
     async def stop(self) -> None:
         if self.process is None or self.process.returncode is not None:

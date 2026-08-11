@@ -1178,7 +1178,7 @@ python -m app.cli.main posts publish-file ./image.jpg --caption "Caption" --conf
 ```
 
 `posts publish-file` is a distinct immediate-publication adapter: it stages one
-local image through a temporary TryCloudflare URL, queues a normal URL-backed
+local image through a temporary ngrok HTTPS URL, queues a normal URL-backed
 post, and processes only that job. Its temporary URL must not be used for
 scheduled work or retries that outlive the command.
 

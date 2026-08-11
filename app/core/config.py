@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite+aiosqlite:///./data/annapost.db"
 
+    # Durable media owned by AnnaPost. The database stores relative keys;
+    # binaries stay outside SQLite and are never removed after publication.
+    media_storage_dir: Path = Path("./data/media")
+    media_max_size_bytes: int = 100 * 1024 * 1024
+
     # Logging
     log_level: str = "INFO"
 

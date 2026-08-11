@@ -222,7 +222,7 @@ python -m app.cli.main runner actions
 
 ```
 
-### Publish a Local Image with TryCloudflare
+### Publish a Local Image with ngrok
 
 `posts publish-file` is the one-shot path for a local image. It makes a real,
 irreversible Instagram post only when `--confirm` is present.
@@ -230,8 +230,8 @@ irreversible Instagram post only when `--confirm` is present.
 #### Preconditions
 
 - Run from the repository root with the project environment active.
-- `cloudflared` must be available on `PATH`; the command uses a Cloudflare
-  Quick Tunnel and does not need a configured Cloudflare domain.
+- `ngrok` must be available on `PATH` and authenticated; the command starts a
+  temporary HTTPS tunnel and discovers its local inspector endpoint.
 - The image must be a regular local file whose filename maps to an `image/*`
   MIME type (for example `.jpg`, `.jpeg`, `.png`, or `.webp`).
 - The target account must be enabled and have `instagram_user_id` plus an
@@ -272,8 +272,7 @@ Omit `--account-id` to use the enabled default account.
 2. It serves only that one file on `127.0.0.1` under a random, unguessable URL.
    Directory listing and arbitrary local paths are unavailable; only `GET` and
    `HEAD` for that route return the image.
-3. It starts `cloudflared tunnel --url ...` and waits up to 30 seconds for the
-   `https://*.trycloudflare.com` URL.
+3. It starts an ngrok HTTP tunnel and waits up to 30 seconds for its HTTPS URL.
 4. It creates a URL-backed image post, queues it, and runs only that exact job.
    It never consumes other pending publish jobs.
 5. It prints a JSON receipt with `post_id`, `job_id`, post status, media ID,
@@ -286,6 +285,32 @@ from a dead URL. The post and its event history remain available for diagnosis.
 Use a durable HTTPS URL or future object-storage resolver for scheduled posts,
 long-running retries, reels, and carousels. This command currently publishes a
 single image only; it is not an S3 replacement.
+
+### Live Insights and Comment Reads
+
+Source of truth: `app/instagram/client.py`, `app/instagram/metrics.py`,
+`app/services/sync.py`, and the provider response at the time of a read. The
+metrics and comments API endpoints return AnnaPost's stored observations; run
+the sync runner to refresh them. A numeric `0` means Instagram explicitly
+reported zero; `NULL` means unavailable and must never be rendered as zero.
+
+Provider verification on 2026-08-12 for a Feed image confirmed these lifetime
+Insights metrics are available individually: `views`, `reach`,
+`total_interactions`, `likes`, `comments`, `shares`, `saved`,
+`profile_activity`, `follows`, and `profile_visits`. `reposts` was explicitly
+rejected by the Instagram Media Insights endpoint for that post type.
+
+**Current integration gap:** this provider verification used explicit
+per-metric requests. `InstagramClient.get_media_insights()` currently makes a
+generic Insights request, so its compatibility with the provider's current
+per-metric shape is **Unknown**. Verify or adapt that client call before
+claiming that `runner sync` stores every metric listed above.
+
+Do not infer readable comment content from `comments_count`. The provider can
+report a non-zero count while `/{media-id}/comments` returns an empty `data`
+array. Treat that as a provider/token visibility limitation; retain the count,
+but do not manufacture authors or text. Revalidate the token's comment
+permissions and the provider response before diagnosing a missing comment.
 
 ---
 
@@ -645,11 +670,13 @@ The project includes comprehensive tests covering:
 - **Solution:** Repair the account through `/docs` or Admin, then rerun with
   `--account-id` or make it the enabled default
 
-#### `publish-file` cannot create a Quick Tunnel
-- **Symptom:** `cloudflared` is unavailable, exits early, or the 30-second
-  startup wait expires
-- **Solution:** Check `cloudflared --version`, local outbound connectivity, and
-  retry the command. No post is created until a tunnel URL is available.
+#### `publish-file` cannot create an ngrok tunnel
+- **Symptom:** ngrok is unavailable, unauthenticated, or the 30-second startup
+  wait expires
+- **Solution:** Run `ngrok version` and `ngrok config check`, then verify that
+  `http://127.0.0.1:4040/api/tunnels` becomes available while ngrok starts. No
+  post is created until the CLI discovers an HTTPS tunnel for its own loopback
+  origin.
 
 #### A one-shot publish failed
 - **Symptom:** JSON output has `"ok": false` and a failed post status
