@@ -8,8 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cli.media_staging import (
     MediaStagingError,
-    NgrokTunnel,
-    SingleFileServer,
     require_image_file,
 )
 from app.core.credentials import resolve_access_token
@@ -50,51 +48,41 @@ async def publish_file(
     account_id: int | None,
     idempotency_key: str | None,
 ) -> dict[str, Any]:
-    """Publish one local image while its ngrok URL remains alive.
-
-    The temporary URL deliberately dies when this operation finishes. Failed
-    jobs are canceled rather than retried against a URL which no longer exists.
-    """
+    """Import and publish one local image through the normal durable path."""
     path, content_type = require_image_file(image_path)
+    del content_type
     async with async_session_maker() as session:
         account = await _get_publish_account(session, account_id)
 
-    with SingleFileServer(path, content_type) as media_server:
-        tunnel = NgrokTunnel(media_server.origin_url)
-        try:
-            public_origin = await tunnel.start()
-            media_url = f"{public_origin}{media_server.route}"
-            async with async_session_maker() as session:
-                post = await create_new_post(
-                    session,
-                    InstagramPostCreate(
-                        account_id=account.id,
-                        media_type=PostMediaType.IMAGE,
-                        media_source_type=PostMediaSourceType.URL,
-                        media_source=media_url,
-                        caption=caption,
-                        idempotency_key=idempotency_key,
-                    ),
-                )
-                job = await queue_publish(session, post.id)
-                if job is None:
-                    raise MediaStagingError(f"Could not queue publication for post {post.id}")
+    async with async_session_maker() as session:
+        post = await create_new_post(
+            session,
+            InstagramPostCreate(
+                account_id=account.id,
+                media_type=PostMediaType.IMAGE,
+                media_source_type=PostMediaSourceType.LOCAL_FILE,
+                media_source=str(path),
+                caption=caption,
+                idempotency_key=idempotency_key,
+            ),
+        )
+        job = await queue_publish(session, post.id)
+        if job is None:
+            raise MediaStagingError(f"Could not queue publication for post {post.id}")
 
-            published = await run_job(job.id)
-            async with async_session_maker() as session:
-                final_post = await get_post(session, post.id)
-                if final_post is None:
-                    raise MediaStagingError(f"Post {post.id} disappeared after publication")
-                if not published:
-                    await cancel_job(session, job.id)
-                return {
-                    "ok": published,
-                    "post_id": final_post.id,
-                    "job_id": job.id,
-                    "status": final_post.status.value,
-                    "instagram_media_id": final_post.instagram_media_id,
-                    "permalink": final_post.instagram_permalink,
-                    "error": final_post.last_error,
-                }
-        finally:
-            await tunnel.stop()
+    published = await run_job(job.id)
+    async with async_session_maker() as session:
+        final_post = await get_post(session, post.id)
+        if final_post is None:
+            raise MediaStagingError(f"Post {post.id} disappeared after publication")
+        if not published:
+            await cancel_job(session, job.id)
+        return {
+            "ok": published,
+            "post_id": final_post.id,
+            "job_id": job.id,
+            "status": final_post.status.value,
+            "instagram_media_id": final_post.instagram_media_id,
+            "permalink": final_post.instagram_permalink,
+            "error": final_post.last_error,
+        }

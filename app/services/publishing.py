@@ -8,17 +8,20 @@ from typing import TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import logging
+import mimetypes
 
 from app.core.credentials import resolve_access_token
 from app.db.models.account import InstagramAccount
 from app.db.models.event import EventType
 from app.db.models.job import InstagramJob, JobStatus
-from app.db.models.post import PostMediaType, PostStatus
+from app.db.models.post import PostMediaSourceType, PostMediaType, PostStatus
 from app.instagram.client import InstagramClient
 from app.instagram.errors import InstagramTransientError
 from app.instagram.schemas import InstagramCarouselItem
 from app.services.events import write_event
 from app.services.media import UrlMediaResolver
+from app.services.media_storage import storage_path
+from app.cli.media_staging import MediaStagingError, NgrokTunnel, SingleFileServer
 from app.services.retry_policy import configured_retry_delay_seconds
 
 if TYPE_CHECKING:
@@ -346,17 +349,49 @@ async def publish_claimed_post(
         )
 
         resolver, api = UrlMediaResolver(), client or InstagramClient()
-        source = await _resolve_media_source(
-            resolver, post.media_source_type, post.media_source
-        )
 
-        container_id = await _create_container(
-            session, api, access_token, account.instagram_user_id, post, source, resolver
-        )
-
-        await _handle_publish_success(
-            session, api, access_token, account.instagram_user_id, container_id, post
-        )
+        if post.media_source_type is PostMediaSourceType.LOCAL_FILE:
+            # The file is durable, but Instagram still needs a temporary
+            # public HTTPS URL. Keep the tunnel alive for the complete remote
+            # container + publish sequence so retries remain possible later.
+            source_path = storage_path(post.media_source)
+            if not source_path.is_file():
+                raise MediaStagingError(f"Stored media file is missing: {post.media_source}")
+            content_type = mimetypes.guess_type(source_path.name)[0] or "application/octet-stream"
+            with SingleFileServer(source_path, content_type) as media_server:
+                tunnel = NgrokTunnel(media_server.origin_url)
+                try:
+                    public_origin = await tunnel.start()
+                    source = f"{public_origin}{media_server.route}"
+                    container_id = await _create_container(
+                        session,
+                        api,
+                        access_token,
+                        account.instagram_user_id,
+                        post,
+                        source,
+                        resolver,
+                    )
+                    await _handle_publish_success(
+                        session,
+                        api,
+                        access_token,
+                        account.instagram_user_id,
+                        container_id,
+                        post,
+                    )
+                finally:
+                    await tunnel.stop()
+        else:
+            source = await _resolve_media_source(
+                resolver, post.media_source_type, post.media_source
+            )
+            container_id = await _create_container(
+                session, api, access_token, account.instagram_user_id, post, source, resolver
+            )
+            await _handle_publish_success(
+                session, api, access_token, account.instagram_user_id, container_id, post
+            )
 
         return True
 

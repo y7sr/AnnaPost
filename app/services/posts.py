@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.event import EventType
 from app.db.models.job import InstagramJob, JobStatus, JobType
-from app.db.models.post import PostStatus
+from app.db.models.post import PostMediaSourceType, PostStatus
 from app.repositories.posts import (
     create_post,
     get_post_by_id,
@@ -26,6 +26,7 @@ from app.schemas.post import (
 )
 from app.services.accounts import get_enabled_default_account_id
 from app.services.events import write_event
+from app.services.media_storage import MediaImportError, import_media
 from app.services.post_state_machine import validate_transition
 
 
@@ -99,13 +100,39 @@ async def create_new_post(
     # Generate idempotency_key if not provided
     idempotency_key = payload.idempotency_key or f"post_{secrets.token_hex(16)}"
 
-    # Build post data
+    # Take ownership of the media before creating the durable post/job record.
+    # A post never enters the queue with a source that may disappear later.
+    try:
+        stored_source = await import_media(
+            source_type=payload.media_source_type,
+            source=payload.media_source,
+        )
+        stored_payload = payload.media_payload_json
+        if payload.media_type.value == "carousel" and stored_payload:
+            items = []
+            for item in stored_payload["items"]:
+                items.append(
+                    {
+                        **item,
+                        "media_source_type": "local_file",
+                        "media_source": await import_media(
+                            source_type=item["media_source_type"],
+                            source=item["media_source"],
+                        ),
+                    }
+                )
+            stored_payload = {"items": items}
+    except MediaImportError:
+        raise
+
+    # Build post data. The original source is intentionally replaced by the
+    # durable internal key; the publisher later exposes it temporarily.
     post_data = {
         "account_id": account_id,
         "media_type": payload.media_type,
-        "media_source_type": payload.media_source_type,
-        "media_source": payload.media_source,
-        "media_payload_json": payload.media_payload_json,
+        "media_source_type": PostMediaSourceType.LOCAL_FILE,
+        "media_source": stored_source,
+        "media_payload_json": stored_payload,
         "caption": payload.caption,
         "status": PostStatus.SCHEDULED
         if payload.scheduled_at and payload.scheduled_at > datetime.now(UTC)
