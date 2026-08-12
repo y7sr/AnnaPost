@@ -23,7 +23,8 @@ PRIORITY: Overview first, then setup, then details
 AnnaPost is a robust, standalone system for publishing and managing content on Instagram. It provides a complete solution for scheduling, publishing, syncing metrics, managing comments, and handling deletions - all through a clean API interface.
 
 ### Key Characteristics
-- **Independent:** No coupling to external systems like Vend1r
+- **Bounded integration:** Optional authenticated Vend1r bridge; AnnaPost still
+  owns post persistence, jobs, and Instagram credentials.
 - **Multi-Account:** Built for multiple Instagram accounts from day one
 - **Idempotent:** Safe to retry operations - prevents duplicate publishing
 - **Self-Contained:** Uses SQLite as both database and queue (no external dependencies)

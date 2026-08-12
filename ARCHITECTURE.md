@@ -6,7 +6,7 @@
 
 **Status:** Phase 3 Implementation Complete. The Phase 2 contracts are now implemented through services, API routes, the shared Instagram client, runners, CLI, migrations, and mocked acceptance coverage.
 
-**Last Updated:** 2026-08-11
+**Last Updated:** 2026-08-12
 
 ---
 
@@ -29,6 +29,7 @@
 15. [Testing](#15-testing)
 16. [Phase Roadmap](#16-phase-roadmap)
 17. [Code Quality Assessment](#17-code-quality-assessment)
+18. [Vend1r Bridge](#18-vend1r-bridge)
 
 ---
 
@@ -45,6 +46,29 @@ External producers (Vend1r or others) talk only to `/api/v1`. They create/modify
 ```
 External Producer → FastAPI → Database → Runners → InstagramClient → Instagram Graph API
 ```
+
+## 18. Vend1r Bridge
+
+Vend1r and AnnaPost share a coherent post lifecycle but retain their own
+responsibilities. Vend1r produces a caption, selected image, critique, and an
+editable status Fragment. AnnaPost owns durable `instagram_posts`, imports the
+media, queues work, calls Instagram, and returns final status/permalink.
+
+The correlation key is the Vend1r-provided deterministic `idempotency_key`
+(`vend1r:{entity_id}:fragment:{status_fragment_id}`), not new source-specific
+columns in `instagram_posts`. The bridge code is
+`app/services/vend1r_bridge.py`; it polls Vend1r's authenticated API with the
+same `ANNAPOST_BRIDGE_TOKEN` configured on both applications.
+
+Vend1r `ready` creates/updates an AnnaPost desired post and queues publication.
+Vend1r `deleted` is passed through `request_post_deletion()`: a published post
+first becomes `delete_requested`, then the action runner completes the remote
+deletion and only then reports `deleted`. Direct terminal-state writes are
+forbidden because they bypass runner side effects.
+
+Current limitation: the polling service exists but is not yet exposed through
+the AnnaPost CLI or a recurring runner, and end-to-end bridge tests are not yet
+present. Do not treat the bridge as live-verified.
 
 Do not introduce Redis/Celery/RabbitMQ/an external scheduler/Docker-only architecture unless a concrete need forces it. SQLite is the queue; runners are invoked externally (cron/systemd/launchd/manual), not by a built-in scheduler.
 
