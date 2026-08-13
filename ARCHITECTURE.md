@@ -535,7 +535,7 @@ If Instagram permits the edit, the action runner applies it; if unsupported, pre
 
 Support `image`, `reel`, `carousel`. Even if v1 only fully implements image publishing, schemas should already accommodate reels/carousels without a later migration.
 
-A `MediaResolver` abstraction converts `local_file | object_storage | existing_url` into a URL Instagram can use — the publishing service implements only the URL case. The `posts publish-file` CLI is deliberately an adapter around that boundary: it stages one local image behind a temporary HTTPS URL, then persists the post as `media_source_type = url`. It does not make `local_file` or `object_storage` resolvable by the general publishing service.
+A `MediaResolver` abstraction converts `local_file | object_storage | existing_url` into a URL Instagram can use. The general publishing service supports AnnaPost-managed `local_file` media by serving one durable file through a temporary loopback server and `NgrokTunnel` during the complete container-plus-publish sequence. The `posts publish-file` CLI is a separate adapter: it stages one local image behind a temporary HTTPS URL, then persists the post as `media_source_type = url`. `object_storage` remains unsupported by the general publishing service.
 
 ### Media Types
 
@@ -550,7 +550,7 @@ A `MediaResolver` abstraction converts `local_file | object_storage | existing_u
 | Type | Description | Resolver |
 |------|-------------|----------|
 | `url` | Direct URL to media | Pass through (v1 implemented) |
-| `local_file` | Local filesystem path | `MediaResolver` (future) |
+| `local_file` | AnnaPost-managed durable media key | Temporary loopback server + `NgrokTunnel` during publish |
 | `object_storage` | Cloud storage reference | `MediaResolver` (future) |
 
 ### One-Shot Local Image Path: `posts publish-file`

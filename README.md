@@ -298,9 +298,23 @@ Omit `--account-id` to use the enabled default account.
 The public URL is intentionally temporary. If publishing fails, the pending
 one-shot job is canceled before cleanup so that an automatic retry cannot fetch
 from a dead URL. The post and its event history remain available for diagnosis.
-Use a durable HTTPS URL or future object-storage resolver for scheduled posts,
-long-running retries, reels, and carousels. This command currently publishes a
-single image only; it is not an S3 replacement.
+For scheduled posts and long-running retries, use AnnaPost-managed durable media
+or a durable HTTPS URL. Object storage remains a future resolver, and this
+command itself currently publishes a single image only; it is not an S3
+replacement.
+
+#### Verified live retry behavior
+
+On 2026-08-13, post `12` was published successfully through the durable
+`local_file` runner path using a fresh temporary ngrok tunnel. The first
+`media_publish` attempt returned Instagram's `Media ID is not available` error;
+the container later reported `FINISHED`, and an explicit retry reused that
+persisted container and completed successfully. The resulting post was
+[published on Instagram](https://www.instagram.com/p/Db-AvuXjmih/).
+
+This confirms that a failed publish may be retried safely after inspecting the
+post, job, and remote container state. The retry reuses the persisted
+`instagram_container_id`; it must not blindly create a second container.
 
 ### Live Insights and Comment Reads
 
@@ -703,6 +717,17 @@ The project includes comprehensive tests covering:
   it will not retry automatically
 - **Solution:** Inspect the post/job/event history, correct the issue, then run
   a new `publish-file` command so Instagram receives a fresh reachable URL
+
+#### Instagram returns `Media ID is not available`
+- **Symptom:** The container ID is persisted, but the publish job fails with
+  `Media ID is not available`.
+- **Check:** Query the persisted container status before retrying. If it later
+  reports `FINISHED`, explicitly retry the same post/job through the runner;
+  the publisher reuses the existing `instagram_container_id` and starts a
+  fresh temporary tunnel for durable local media.
+- **Safety:** Do not create a second container until the remote state confirms
+  that the original container cannot be published and the existing job is not
+  already completed.
 
 ### Debug Mode
 Enable debug mode for verbose logging:
