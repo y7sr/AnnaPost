@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +24,17 @@ class Vend1rBridgeError(RuntimeError):
     """The bridge cannot safely synchronize without its shared token."""
 
 
+BRIDGE_ELIGIBLE_STATUSES = {
+    "draft",
+    "ready",
+    "scheduled",
+    "failed",
+    "published",
+    "deleted",
+    "canceled",
+}
+
+
 def _headers() -> dict[str, str]:
     token = settings.annapost_bridge_token
     if not token:
@@ -34,20 +46,36 @@ async def _write_vend1r(client: httpx.AsyncClient, internal_post_id: str, post: 
     payload = {"status": post.status.value}
     if post.instagram_permalink:
         payload["instagram_post_url"] = post.instagram_permalink
-    response = await client.put(f"/api/v1/annapost-bridge/posts/{internal_post_id}", json=payload)
+    query = urlencode({"workspace_id": settings.vend1r_bridge_workspace_id})
+    response = await client.put(
+        f"/api/v1/annapost-bridge/posts/{internal_post_id}?{query}", json=payload
+    )
     response.raise_for_status()
 
 
 async def synchronize_vend1r_posts(session: AsyncSession) -> dict[str, int]:
     """Poll Vend1r, create/update desired posts, then report AnnaPost state."""
     headers = _headers()
-    report = {"created": 0, "updated": 0, "published_queued": 0, "deleted_requested": 0, "reported": 0}
+    report = {
+        "fetched": 0,
+        "skipped": 0,
+        "created": 0,
+        "updated": 0,
+        "published_queued": 0,
+        "deleted_requested": 0,
+        "reported": 0,
+    }
     async with httpx.AsyncClient(base_url=settings.vend1r_bridge_base_url.rstrip("/"), headers=headers, timeout=30.0) as client:
-        response = await client.get("/api/v1/annapost-bridge/posts")
+        query = urlencode({"workspace_id": settings.vend1r_bridge_workspace_id})
+        response = await client.get(f"/api/v1/annapost-bridge/posts?{query}")
         response.raise_for_status()
         for source in response.json().get("posts", []):
+            report["fetched"] += 1
             internal_post_id = source["internal_post_id"]
-            desired_status = source["status"]
+            desired_status = str(source["status"]).strip().lower()
+            if desired_status not in BRIDGE_ELIGIBLE_STATUSES:
+                report["skipped"] += 1
+                continue
             post = await get_post_by_idempotency_key(session, internal_post_id)
             if post is None:
                 post = await create_new_post(session, InstagramPostCreate(

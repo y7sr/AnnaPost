@@ -52,9 +52,15 @@ make migrate
 ### Runners
 ```bash
 python -m app.runners.publish
+python -m app.runners.bridge
 python -m app.runners.sync
 python -m app.runners.actions
 ```
+
+`runner bridge` polls the configured Vend1r workspace, imports media into
+AnnaPost-owned durable storage, and never publishes by itself. Configure
+`VEND1R_BRIDGE_WORKSPACE_ID` and the shared `ANNAPOST_BRIDGE_TOKEN`; scheduling
+is external to AnnaPost.
 
 ### CLI
 ```bash
@@ -211,4 +217,4 @@ tests/
 
 ---
 
-*Updated 2026-08-11 for AnnaPost v0.1.0*
+*Updated 2026-08-12 for AnnaPost v0.1.0*

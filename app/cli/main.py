@@ -11,11 +11,11 @@ from app.db.session import async_session_maker
 
 async def _main(args: argparse.Namespace) -> None:
     if args.group == "runner":
-        from app.runners import actions, publish, sync
+        from app.runners import actions, bridge, publish, sync
 
-        print(
-            await {"publish": publish.run, "sync": sync.run, "actions": actions.run}[args.command]()
-        )
+        runner = {"publish": publish.run, "sync": sync.run, "actions": actions.run, "bridge": bridge.run}
+        result = await runner[args.command]()
+        print(json.dumps(result, sort_keys=True) if isinstance(result, dict) else result)
         return
     if args.group == "posts" and args.command == "publish-file":
         if not args.confirm:
@@ -78,7 +78,7 @@ def main() -> None:
     )
     groups.add_parser("jobs").add_subparsers(dest="command", required=True).add_parser("list")
     runner = groups.add_parser("runner").add_subparsers(dest="command", required=True)
-    for name in ("publish", "sync", "actions"):
+    for name in ("publish", "sync", "actions", "bridge"):
         runner.add_parser(name)
     asyncio.run(_main(parser.parse_args()))
 

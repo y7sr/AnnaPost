@@ -60,15 +60,28 @@ columns in `instagram_posts`. The bridge code is
 `app/services/vend1r_bridge.py`; it polls Vend1r's authenticated API with the
 same `ANNAPOST_BRIDGE_TOKEN` configured on both applications.
 
+The bridge always sends `workspace_id` on both the poll and callback requests.
+Set `VEND1R_BRIDGE_WORKSPACE_ID` to the named Vend1r workspace; the default is
+`default`. Vend1r returns a workspace-aware asset URL, and AnnaPost copies the
+bytes into its own durable media storage before persisting the post.
+
 Vend1r `ready` creates/updates an AnnaPost desired post and queues publication.
 Vend1r `deleted` is passed through `request_post_deletion()`: a published post
 first becomes `delete_requested`, then the action runner completes the remote
 deletion and only then reports `deleted`. Direct terminal-state writes are
 forbidden because they bypass runner side effects.
 
-Current limitation: the polling service exists but is not yet exposed through
-the AnnaPost CLI or a recurring runner, and end-to-end bridge tests are not yet
-present. Do not treat the bridge as live-verified.
+The polling service is exposed through `runner bridge` and can be invoked
+manually or by an external scheduler. The runner imports durable media and
+desired post state only; publication still requires the separate `runner
+publish` command. `draft` imports do not create publish jobs; only a Vend1r
+`ready` state queues publication. The live bridge remains
+configuration-dependent on the shared `ANNAPOST_BRIDGE_TOKEN`.
+
+The local end-to-end draft path was verified on 2026-08-12 with Vend1r
+workspace `frdprfct`: entity 20 was imported as an AnnaPost `draft`, the
+122679-byte image was copied to durable storage, and no publish job was
+created. This verification did not call Instagram.
 
 Do not introduce Redis/Celery/RabbitMQ/an external scheduler/Docker-only architecture unless a concrete need forces it. SQLite is the queue; runners are invoked externally (cron/systemd/launchd/manual), not by a built-in scheduler.
 
@@ -385,7 +398,14 @@ All errors inherit from `InstagramError` base class in `app/instagram/errors.py`
 
 ## 7. Runners (Phase 3 Contract)
 
-Three entrypoints: `python -m app.runners.{publish,sync,actions}`. Safe to invoke arbitrarily often (e.g. publish every minute, sync every few minutes) — the runner itself determines whether work is due.
+Four entrypoints: `python -m app.runners.{bridge,publish,sync,actions}`. Safe to invoke arbitrarily often (e.g. bridge/publish every minute, sync every few minutes) — the runner itself determines whether work is due.
+
+The `bridge` runner polls the configured Vend1r workspace and imports eligible
+desired posts into AnnaPost's database and durable media storage. It does not
+call Instagram and does not publish imported drafts; `publish` remains a
+separate runner. Vend1r states such as `do_not_publish` are intentionally not
+bridge-eligible. The runner is a manually or externally scheduled command,
+not a built-in cron process.
 
 ### `publish_runner`
 
@@ -881,4 +901,4 @@ v1 definition of done (`plan.annapost.md` §35): an external client can create a
 
 ---
 
-*This architecture reference is based on the codebase at /Users/yannis/dev/AnnaPost and was last updated on 2026-08-11*
+*This architecture reference is based on the codebase at /Users/yannis/dev/AnnaPost and was last updated on 2026-08-12*

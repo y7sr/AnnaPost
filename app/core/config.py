@@ -60,6 +60,7 @@ class Settings(BaseSettings):
 
     # Vend1r bridge. Both applications must receive the same non-empty token.
     vend1r_bridge_base_url: str = "http://127.0.0.1:8701"
+    vend1r_bridge_workspace_id: str = "default"
     annapost_bridge_token: str | None = None
 # Create settings instance
 settings = Settings()

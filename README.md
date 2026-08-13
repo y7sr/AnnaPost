@@ -67,6 +67,11 @@ LOG_LEVEL=INFO
 
 # Optional settings
 DEBUG=False
+
+# Optional Vend1r bridge
+VEND1R_BRIDGE_BASE_URL=http://127.0.0.1:8701
+VEND1R_BRIDGE_WORKSPACE_ID=default
+ANNAPOST_BRIDGE_TOKEN=
 ```
 
 #### 3. Install Dependencies
@@ -212,6 +217,9 @@ python -m app.cli.main jobs list
 
 #### Runner Execution
 ```bash
+# Poll Vend1r and import eligible drafts/desired posts; does not publish
+python -m app.cli.main runner bridge
+
 # Run publish runner
 python -m app.cli.main runner publish
 
@@ -222,6 +230,13 @@ python -m app.cli.main runner sync
 python -m app.cli.main runner actions
 
 ```
+
+The bridge runner is safe to invoke repeatedly and does not call Instagram.
+It polls the Vend1r workspace configured by `VEND1R_BRIDGE_WORKSPACE_ID`,
+imports media into `data/media`, and only queues publication when Vend1r sends
+`ready`. `draft` and `do_not_publish` never create a publish job. Scheduling is
+external (manual, cron, launchd, or systemd); AnnaPost does not run a built-in
+cron loop.
 
 ### Publish a Local Image with ngrok
 
@@ -378,6 +393,9 @@ RUNNERS = reconciliation between both
 | `DATABASE_URL` | Database connection URL | `sqlite+aiosqlite:///./annapost.db` |
 | `INSTAGRAM_GRAPH_API_VERSION` | Instagram Graph API version | `v18.0` |
 | `LOCK_STALE_AFTER_SECONDS` | Stale lock timeout in seconds | `600` (10 minutes) |
+| `VEND1R_BRIDGE_BASE_URL` | Vend1r bridge base URL | `http://127.0.0.1:8701` |
+| `VEND1R_BRIDGE_WORKSPACE_ID` | Vend1r workspace polled by the bridge | `default` |
+| `ANNAPOST_BRIDGE_TOKEN` | Shared server-to-server bridge token | unset |
 | `LOG_LEVEL` | Logging level | `INFO` |
 | `DEBUG` | Enable debug mode | `False` |
 
