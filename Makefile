@@ -3,7 +3,7 @@
 .PHONY: run test lint migrate
 
 run:
-	uvicorn app.main:app --reload
+	uvicorn app.main:app --reload --port 8901
 
 test:
 	python -m pytest

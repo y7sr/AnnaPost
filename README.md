@@ -97,13 +97,13 @@ alembic upgrade head
 ### Running the Application
 ```bash
 # Development server with auto-reload
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8901
 
 # Production server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8901
 ```
 
-The application will be available at `http://localhost:8000`
+The application will be available at `http://localhost:8901`
 
 ---
 
@@ -112,12 +112,12 @@ The application will be available at `http://localhost:8000`
 ### API Documentation
 
 Once running, access the interactive API documentation:
-- **OpenAPI Docs:** `http://localhost:8000/docs`
-- **Redoc:** `http://localhost:8000/redoc`
+- **OpenAPI Docs:** `http://localhost:8901/docs`
+- **Redoc:** `http://localhost:8901/redoc`
 
 ### Health Check
 ```bash
-curl http://localhost:8000/health
+curl http://localhost:8901/health
 # {"status": "ok"}
 ```
 
@@ -167,7 +167,7 @@ curl http://localhost:8000/health
 | PATCH | `/api/v1/options/{key}` | Update a global option |
 
 ### Admin Dashboard
-Access the admin dashboard at `http://localhost:8000/admin`
+Access the admin dashboard at `http://localhost:8901/admin`
 
 **Dashboard Features:**
 - Account management (CRUD, default account selection)
@@ -265,7 +265,7 @@ For example, this request changes local AnnaPost account configuration and
 demotes any current default account; it does not publish anything:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/v1/accounts \
+curl -X POST http://127.0.0.1:8901/api/v1/accounts \
   -H 'content-type: application/json' \
   -d '{
     "name": "primary",
@@ -738,7 +738,7 @@ The project includes comprehensive tests covering:
 Enable debug mode for verbose logging:
 
 ```bash
-DEBUG=true uvicorn app.main:app --reload
+DEBUG=true uvicorn app.main:app --reload --port 8901
 ```
 
 ---

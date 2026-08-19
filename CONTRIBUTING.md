@@ -57,8 +57,8 @@ cp .env.example .env
 alembic upgrade head
 
 # Verify setup
-uvicorn app.main:app --reload
-# Visit http://localhost:8000/health
+uvicorn app.main:app --reload --port 8901
+# Visit http://localhost:8901/health
 ```
 
 ### Running Tests

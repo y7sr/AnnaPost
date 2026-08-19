@@ -39,8 +39,8 @@ make install
 
 ### Run the app
 ```bash
-python -m app.main                       # dev server on :8000
-uvicorn app.main:app --reload
+python -m app.main                       # dev server on :8901
+uvicorn app.main:app --reload --port 8901
 make run
 ```
 
