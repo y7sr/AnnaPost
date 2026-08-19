@@ -34,6 +34,7 @@ class NormalizedPostMetrics(BaseModel):
 # Graph API names belong here, not in services, models, repositories, or
 # runners. Multiple upstream names may intentionally feed one stable field.
 GRAPH_METRIC_TO_FIELD = {
+    "views": "views",
     "impressions": "views",
     "video_views": "views",
     "reach": "reach",
@@ -48,6 +49,23 @@ GRAPH_METRIC_TO_FIELD = {
     "profile_activity": "profile_activity",
     "follows_and_unfollows": "follows",
 }
+
+# The Media Insights endpoint requires one metric per request. These are the
+# current feed-image metrics verified against the configured Graph API. The
+# client preserves unsupported metrics in the raw payload instead of failing a
+# complete synchronization for a media-type-specific capability difference.
+GRAPH_MEDIA_INSIGHT_METRICS = (
+    "views",
+    "reach",
+    "total_interactions",
+    "likes",
+    "comments",
+    "shares",
+    "saved",
+    "profile_activity",
+    "follows",
+    "profile_visits",
+)
 
 
 def _integer_value(record: Mapping[str, Any]) -> int | None:

@@ -18,6 +18,7 @@ from app.instagram.errors import (
     InstagramTransientError,
     InstagramValidationError,
 )
+from app.instagram.metrics import GRAPH_MEDIA_INSIGHT_METRICS
 from app.instagram.schemas import (
     InstagramCarouselItem,
     InstagramCommentsPage,
@@ -209,7 +210,30 @@ class InstagramClient:
         await self._request("DELETE", media_id, token=access_token)
 
     async def get_media_insights(self, *, access_token: str, media_id: str) -> dict[str, Any]:
-        return await self._request("GET", f"{media_id}/insights", token=access_token)
+        """Read individually-requested insights without treating unsupported metrics as fatal.
+
+        Instagram requires the ``metric`` query parameter and its supported
+        values vary by media type. A rejected individual metric is retained as
+        an unavailable capability in the raw observation; authentication,
+        permission, rate-limit, and network errors still fail the sync.
+        """
+        records: list[dict[str, Any]] = []
+        unavailable_metrics: list[dict[str, str]] = []
+        for metric in GRAPH_MEDIA_INSIGHT_METRICS:
+            try:
+                payload = await self._request(
+                    "GET",
+                    f"{media_id}/insights",
+                    token=access_token,
+                    params={"metric": metric},
+                )
+            except InstagramValidationError as exc:
+                unavailable_metrics.append({"metric": metric, "error": str(exc)})
+                continue
+            data = payload.get("data")
+            if isinstance(data, list):
+                records.extend(item for item in data if isinstance(item, dict))
+        return {"data": records, "unavailable_metrics": unavailable_metrics}
 
     async def get_comments(
         self, *, access_token: str, media_id: str, after: str | None = None

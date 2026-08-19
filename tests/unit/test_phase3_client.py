@@ -8,6 +8,7 @@ import respx
 
 from app.core.config import settings
 from app.instagram.client import InstagramClient
+from app.instagram.metrics import GRAPH_MEDIA_INSIGHT_METRICS
 from app.instagram.schemas import InstagramCarouselItem
 
 
@@ -78,8 +79,17 @@ async def test_all_client_methods_use_the_graph_boundary() -> None:
             ).permalink == "https://ig/p"
             await client.delete_media(access_token="token", media_id="media")
             assert await client.get_media_insights(access_token="token", media_id="media") == {
-                "data": []
+                "data": [],
+                "unavailable_metrics": [],
             }
+            insight_requests = [
+                request
+                for request in mock.calls
+                if request.request.url.path == f"/{settings.ig_graph_api_version}/media/insights"
+            ]
+            assert {request.request.url.params["metric"] for request in insight_requests} == set(
+                GRAPH_MEDIA_INSIGHT_METRICS
+            )
             assert (await client.get_comments(access_token="token", media_id="media")).comments[
                 0
             ].id == "comment"
