@@ -13,7 +13,12 @@ async def _main(args: argparse.Namespace) -> None:
     if args.group == "runner":
         from app.runners import actions, bridge, publish, sync
 
-        runner = {"publish": publish.run, "sync": sync.run, "actions": actions.run, "bridge": bridge.run}
+        runner = {
+            "publish": publish.run,
+            "sync": sync.run,
+            "actions": actions.run,
+            "bridge": bridge.run,
+        }
         result = await runner[args.command]()
         print(json.dumps(result, sort_keys=True) if isinstance(result, dict) else result)
         return

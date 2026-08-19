@@ -68,21 +68,23 @@ async def import_media(*, source_type: PostMediaSourceType, source: str) -> str:
     if source_type is PostMediaSourceType.URL:
         key: str | None = None
         try:
-            async with httpx.AsyncClient(
-                timeout=httpx.Timeout(connect=10, read=60, write=60, pool=10),
-                follow_redirects=True,
-            ) as client:
-                async with client.stream("GET", source) as response:
-                    response.raise_for_status()
-                    content_type = response.headers.get("content-type")
-                    key = _new_key(source, content_type)
-                    destination = storage_path(key)
-                    size = 0
-                    with destination.open("wb") as output:
-                        async for chunk in response.aiter_bytes(64 * 1024):
-                            size += len(chunk)
-                            _check_size(size)
-                            output.write(chunk)
+            async with (
+                httpx.AsyncClient(
+                    timeout=httpx.Timeout(connect=10, read=60, write=60, pool=10),
+                    follow_redirects=True,
+                ) as client,
+                client.stream("GET", source) as response,
+            ):
+                response.raise_for_status()
+                content_type = response.headers.get("content-type")
+                key = _new_key(source, content_type)
+                destination = storage_path(key)
+                size = 0
+                with destination.open("wb") as output:
+                    async for chunk in response.aiter_bytes(64 * 1024):
+                        size += len(chunk)
+                        _check_size(size)
+                        output.write(chunk)
             return key
         except (httpx.HTTPError, OSError, MediaImportError) as exc:
             if key is not None:

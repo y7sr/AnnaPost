@@ -65,7 +65,9 @@ async def synchronize_vend1r_posts(session: AsyncSession) -> dict[str, int]:
         "deleted_requested": 0,
         "reported": 0,
     }
-    async with httpx.AsyncClient(base_url=settings.vend1r_bridge_base_url.rstrip("/"), headers=headers, timeout=30.0) as client:
+    async with httpx.AsyncClient(
+        base_url=settings.vend1r_bridge_base_url.rstrip("/"), headers=headers, timeout=30.0
+    ) as client:
         query = urlencode({"workspace_id": settings.vend1r_bridge_workspace_id})
         response = await client.get(f"/api/v1/annapost-bridge/posts?{query}")
         response.raise_for_status()
@@ -78,26 +80,39 @@ async def synchronize_vend1r_posts(session: AsyncSession) -> dict[str, int]:
                 continue
             post = await get_post_by_idempotency_key(session, internal_post_id)
             if post is None:
-                post = await create_new_post(session, InstagramPostCreate(
-                    media_type=PostMediaType.IMAGE,
-                    media_source_type=PostMediaSourceType.URL,
-                    media_source=source["media_url"],
-                    caption=source["caption"],
-                    idempotency_key=internal_post_id,
-                ))
+                post = await create_new_post(
+                    session,
+                    InstagramPostCreate(
+                        media_type=PostMediaType.IMAGE,
+                        media_source_type=PostMediaSourceType.URL,
+                        media_source=source["media_url"],
+                        caption=source["caption"],
+                        idempotency_key=internal_post_id,
+                    ),
+                )
                 report["created"] += 1
                 post = await get_post_by_idempotency_key(session, internal_post_id)
             assert post is not None
 
-            if desired_status in {"draft", "ready", "scheduled"} and post.status in {PostStatus.DRAFT, PostStatus.READY, PostStatus.SCHEDULED}:
-                updated = await update_existing_post(session, post.id, InstagramPostUpdate(caption=source["caption"]))
+            if desired_status in {"draft", "ready", "scheduled"} and post.status in {
+                PostStatus.DRAFT,
+                PostStatus.READY,
+                PostStatus.SCHEDULED,
+            }:
+                updated = await update_existing_post(
+                    session, post.id, InstagramPostUpdate(caption=source["caption"])
+                )
                 post = await get_post_by_idempotency_key(session, internal_post_id)
                 report["updated"] += int(updated is not None)
             if desired_status == "ready" and post.status in {PostStatus.DRAFT, PostStatus.FAILED}:
                 await queue_publish(session, post.id)
                 post = await get_post_by_idempotency_key(session, internal_post_id)
                 report["published_queued"] += 1
-            elif desired_status == "deleted" and post.status not in {PostStatus.DELETED, PostStatus.CANCELED, PostStatus.DELETE_REQUESTED}:
+            elif desired_status == "deleted" and post.status not in {
+                PostStatus.DELETED,
+                PostStatus.CANCELED,
+                PostStatus.DELETE_REQUESTED,
+            }:
                 await request_post_deletion(session, post.id)
                 post = await get_post_by_idempotency_key(session, internal_post_id)
                 report["deleted_requested"] += 1

@@ -115,7 +115,7 @@ async def claim_post_for_publishing(
     """Atomically claim a ready/scheduled/failed post for publishing.
 
     FAILED posts can be claimed for retry (per state machine: failed -> publishing).
-    
+
     Equivalent to:
         UPDATE instagram_posts
         SET status = 'publishing', locked_at = :now, locked_by = :worker_id
@@ -135,7 +135,9 @@ async def claim_post_for_publishing(
         .where(
             InstagramPost.id == post_id,
             or_(
-                InstagramPost.status.in_([PostStatus.READY, PostStatus.SCHEDULED, PostStatus.FAILED]),
+                InstagramPost.status.in_(
+                    [PostStatus.READY, PostStatus.SCHEDULED, PostStatus.FAILED]
+                ),
                 (InstagramPost.status == PostStatus.PUBLISHING)
                 & (InstagramPost.locked_at < stale_cutoff),
             ),

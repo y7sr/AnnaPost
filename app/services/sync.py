@@ -63,9 +63,7 @@ async def sync_post(
             post_id=post.id,
             payload_json={"metric_id": snapshot.id},
         )
-        page = await api.get_comments(
-            access_token=access_token, media_id=post.instagram_media_id
-        )
+        page = await api.get_comments(access_token=access_token, media_id=post.instagram_media_id)
         for remote in page.comments:
             await upsert_comment(
                 session,

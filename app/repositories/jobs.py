@@ -75,9 +75,7 @@ async def retry_failed_job(session: AsyncSession, job_id: int, *, now: datetime)
             update(InstagramPost)
             .where(
                 InstagramPost.id
-                == select(InstagramJob.post_id)
-                .where(InstagramJob.id == job_id)
-                .scalar_subquery()
+                == select(InstagramJob.post_id).where(InstagramJob.id == job_id).scalar_subquery()
             )
             .values(locked_at=None, locked_by=None)
         )

@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from pydantic import AliasChoices, ConfigDict, Field
 from pydantic_settings import BaseSettings
 
-
 # ``Settings`` reads ``.env`` for typed configuration, while credential
 # references are resolved through ``os.environ``. Load the same file into the
 # process environment without overriding explicitly exported variables.
@@ -62,6 +61,8 @@ class Settings(BaseSettings):
     vend1r_bridge_base_url: str = "http://127.0.0.1:8701"
     vend1r_bridge_workspace_id: str = "default"
     annapost_bridge_token: str | None = None
+
+
 # Create settings instance
 settings = Settings()
 

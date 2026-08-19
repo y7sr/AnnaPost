@@ -29,8 +29,7 @@ def resolve_access_token(
     value = reference.strip()
     if not value.startswith("env:"):
         raise CredentialResolutionError(
-            "Access token must be an environment reference such as "
-            "env:INSTAGRAM_ACCESS_TOKEN"
+            "Access token must be an environment reference such as env:INSTAGRAM_ACCESS_TOKEN"
         )
 
     name = value.removeprefix("env:").strip()

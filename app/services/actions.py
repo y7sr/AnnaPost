@@ -115,9 +115,7 @@ async def execute_action(
     except Exception as exc:
         delay = await configured_retry_delay_seconds(session, exc, attempt=attempt)
         job.status = (
-            JobStatus.PENDING
-            if delay is not None and attempt < max_attempts
-            else JobStatus.FAILED
+            JobStatus.PENDING if delay is not None and attempt < max_attempts else JobStatus.FAILED
         )
         job.run_after = datetime.now(UTC) + timedelta(seconds=delay) if delay else None
         job.locked_at = job.locked_by = None

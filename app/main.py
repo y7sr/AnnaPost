@@ -56,6 +56,7 @@ static_dir = admin_path / "static"
 # Mount admin static files
 app.mount("/admin/static", StaticFiles(directory=str(static_dir)), name="admin_static")
 
+
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""

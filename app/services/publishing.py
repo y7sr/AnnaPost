@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+import mimetypes
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import logging
-import mimetypes
-
+from app.cli.media_staging import MediaStagingError, NgrokTunnel, SingleFileServer
 from app.core.credentials import resolve_access_token
 from app.db.models.account import InstagramAccount
 from app.db.models.event import EventType
@@ -21,7 +21,6 @@ from app.instagram.schemas import InstagramCarouselItem
 from app.services.events import write_event
 from app.services.media import UrlMediaResolver
 from app.services.media_storage import storage_path
-from app.cli.media_staging import MediaStagingError, NgrokTunnel, SingleFileServer
 from app.services.retry_policy import configured_retry_delay_seconds
 
 if TYPE_CHECKING:
