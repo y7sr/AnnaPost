@@ -91,9 +91,9 @@ async def test_draft_is_imported_with_durable_media_without_publish_job(
             },
         )
     )
-    respx.put("https://vend1r.test/api/v1/annapost-bridge/posts/vend1r:20:fragment:1?workspace_id=frdprfct").mock(
-        return_value=Response(200, json={"status": "draft"})
-    )
+    respx.put(
+        "https://vend1r.test/api/v1/annapost-bridge/posts/vend1r:20:fragment:1?workspace_id=frdprfct"
+    ).mock(return_value=Response(200, json={"status": "draft"}))
     media = respx.get("https://vend1r.test/storage/20.jpg").mock(
         return_value=Response(200, headers={"content-type": "image/jpeg"}, content=b"jpeg")
     )

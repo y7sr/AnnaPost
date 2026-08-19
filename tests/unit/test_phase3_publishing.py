@@ -139,6 +139,5 @@ async def test_ambiguous_timeout_after_media_publish(db_session, monkeypatch, ca
 
     # Check that the warning was logged
     assert any(
-        "Ambiguous timeout after media_publish" in record.message
-        for record in caplog.records
+        "Ambiguous timeout after media_publish" in record.message for record in caplog.records
     )

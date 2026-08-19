@@ -1,6 +1,6 @@
 """Pytest configuration and fixtures."""
 
-import os
+import shutil
 import tempfile
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
@@ -17,6 +17,23 @@ from app.core.config import settings
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+
+@pytest.fixture
+def mock_post_media_import(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Isolate post creation tests from external media acquisition."""
+    from app.services import posts
+
+    async def fake_import_media(*, source_type: object, source: str) -> str:
+        del source_type, source
+        from app.services.media_storage import storage_path
+
+        key = "test-media.jpg"
+        storage_path(key).write_bytes(b"test media")
+        return key
+
+    monkeypatch.setattr(posts, "import_media", fake_import_media)
+
+
 # SQLAlchemy async engine for tests
 # Each test gets its own temporary database file
 
@@ -28,11 +45,8 @@ def temp_db_path() -> Generator[Path, None, None]:
     temp_dir = Path(tempfile.mkdtemp())
     db_path = temp_dir / "test.db"
     yield db_path
-    # Cleanup
-    if db_path.exists():
-        os.unlink(db_path)
-    if temp_dir.exists():
-        os.rmdir(temp_dir)
+    # Cleanup the database and test-only durable-media directory together.
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture(autouse=True)
@@ -44,6 +58,7 @@ async def setup_test_db(
         monkeypatch.setenv(name, f"test-{name.lower()}")
     db_url = f"sqlite+aiosqlite:///{temp_db_path}"
     monkeypatch.setattr(settings, "database_url", db_url)
+    monkeypatch.setattr(settings, "media_storage_dir", temp_db_path.parent / "media")
     config = Config(str(REPO_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(REPO_ROOT / "alembic"))
     command.upgrade(config, "head")
@@ -72,7 +87,7 @@ def test_app() -> Any:
 
 @pytest.fixture
 async def async_client(
-    test_app: Any, db_session: AsyncSession
+    test_app: Any, db_session: AsyncSession, mock_post_media_import: None
 ) -> AsyncGenerator[AsyncClient, None]:
     """Create an async HTTPX client for testing the app."""
     from app.db.session import get_db

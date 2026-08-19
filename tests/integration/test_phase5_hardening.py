@@ -33,6 +33,8 @@ from app.services.posts import create_new_post, request_post_deletion
 from app.services.publishing import publish_claimed_post
 from app.services.sync import sync_post
 
+pytestmark = pytest.mark.usefixtures("mock_post_media_import")
+
 
 class EndToEndClient:
     async def create_image_container(self, **_: str) -> InstagramContainer:
@@ -68,8 +70,35 @@ class TransactionBoundaryClient:
         return InstagramCreatedComment(id="outgoing-comment")
 
 
-async def test_v1_flow_uses_only_the_mocked_instagram_boundary(db_session) -> None:
+async def test_v1_flow_uses_only_the_mocked_instagram_boundary(db_session, monkeypatch) -> None:
     """Exercise the Definition-of-Done lifecycle without any network access."""
+
+    class FakeMediaServer:
+        origin_url = "http://127.0.0.1:9999"
+        route = "/test-media.jpg"
+
+        def __init__(self, *_: object) -> None:
+            pass
+
+        def __enter__(self) -> FakeMediaServer:
+            return self
+
+        def __exit__(self, *_: object) -> None:
+            pass
+
+    class FakeTunnel:
+        def __init__(self, *_: object) -> None:
+            pass
+
+        async def start(self) -> str:
+            return "https://media.test"
+
+        async def stop(self) -> None:
+            pass
+
+    monkeypatch.setattr("app.services.publishing.SingleFileServer", FakeMediaServer)
+    monkeypatch.setattr("app.services.publishing.NgrokTunnel", FakeTunnel)
+
     primary = await create_new_account(
         db_session,
         InstagramAccountCreate(

@@ -16,6 +16,8 @@ from app.schemas.post import (
     InstagramPostResponse,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_post_media_import")
+
 
 @pytest.mark.asyncio
 async def test_accounts_crud(async_client: object, db_session: object) -> None:
