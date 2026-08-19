@@ -4,9 +4,9 @@
 
 This file provides guidance to AI coding assistants when working with code in this repository.
 
-**Last Updated:** 2026-08-11  
-**Project Version:** 0.1.0  
-**Project Status:** Phase 3 Implementation Complete
+**Last Updated:** 2026-08-19
+**Project Version:** 0.1.1
+**Project Status:** Stabilized Phase 3 service with implemented admin UI
 
 ---
 
@@ -20,9 +20,12 @@ The full spec lives in `plan.annapost.md` (35 sections). The build is broken int
 - `phases/02-architecture.md` — full data model, state machine, contracts (done 2026-08-11)
 - `phases/03-implementation.md` — services/API/runners (**COMPLETED 2026-08-11**)
 - `phases/04-ui.md` — server-rendered `/admin` dashboard (in progress)
-- `phases/05-review.md` — full test-suite pass, audit (not started)
+- `phases/05-review.md` — historical review plan; current stabilization is
+  recorded in `docs/INDEX.md` and the root testing documentation.
 
-**Current Status:** Phase 3 complete. All architectural decisions from Phase 2 are implemented. See `annapost-deep-code-review.md` for comprehensive code review (9.2/10 assessment).
+**Current Status:** 151 tests, Ruff, formatting, durable-media isolation, and
+an authenticated Instagram sync were verified on 2026-08-19. Historical code
+reviews are not the current source of truth.
 
 ---
 
@@ -177,7 +180,7 @@ use a durable HTTPS source rather than this temporary path.
 - Admin UI dashboard (Phase 4)
 
 ### Not Started
-- Full review and hardening (Phase 5)
+- Product-directed admin UI expansion
 
 ---
 
@@ -214,6 +217,7 @@ tests/
 - `plan.annapost.md` - Implementation plan
 - `phases/*.md` - Phase documentation
 - `annapost-deep-code-review.md` - Comprehensive code review
+- `docs/INDEX.md` - task routing for coding agents
 
 ---
 

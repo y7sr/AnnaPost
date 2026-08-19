@@ -2,7 +2,7 @@
 
 **Standalone Instagram Publishing System**
 
-**Document Type:** Project Documentation | **Version:** 0.1.0 | **Status:** Phase 3 Implementation Complete | **Last Updated:** 2026-08-11
+**Document Type:** Project Documentation | **Version:** 0.1.1 | **Status:** Implementation and stabilization verified | **Last Updated:** 2026-08-19
 
 ---
 
@@ -28,14 +28,19 @@ AnnaPost is a robust, standalone system for publishing and managing content on I
 - **Multi-Account:** Built for multiple Instagram accounts from day one
 - **Idempotent:** Safe to retry operations - prevents duplicate publishing
 - **Self-Contained:** Uses SQLite as both database and queue (no external dependencies)
-- **Production-Ready:** Phase 3 implementation complete, Phase 4 UI in progress
+- **Durable media:** URL and local-file inputs are copied into AnnaPost-owned
+  storage before a post or job is created.
 
 ### Current Status
 - ✅ **Phase 1:** Skeleton (FastAPI, SQLite, Alembic, health endpoint)
 - ✅ **Phase 2:** Architecture (Data model, state machine, contracts, migrations)
-- ✅ **Phase 3:** Implementation (Services, API, runners, CLI)
-- 🟡 **Phase 4:** UI (Admin dashboard with Jinja2 + HTMX)
-- ❌ **Phase 5:** Review (Full test suite, hardening, audit)
+- ✅ **Phase 3:** Services, API, runners, CLI, and durable media
+- 🟡 **Admin UI:** Jinja2/HTMX administration is implemented; expand it only
+  against an explicit product requirement.
+- ✅ **Stabilization:** 151 automated tests passed on 2026-08-19 with no real
+  Instagram or media-download network calls.
+- ✅ **Live read:** an authenticated sync of published post `12` completed on
+  2026-08-19 and stored its first metric snapshot. No draft was published.
 
 ---
 
@@ -60,8 +65,8 @@ cp .env.example .env
 #### 2. Environment Configuration
 ```bash
 # Required settings (edit .env)
-DATABASE_URL=sqlite+aiosqlite:///./annapost.db
-INSTAGRAM_GRAPH_API_VERSION=v18.0
+DATABASE_URL=sqlite+aiosqlite:///./data/annapost.db
+INSTAGRAM_GRAPH_API_VERSION=v25.0
 LOCK_STALE_AFTER_SECONDS=600
 LOG_LEVEL=INFO
 
@@ -330,11 +335,11 @@ Insights metrics are available individually: `views`, `reach`,
 `profile_activity`, `follows`, and `profile_visits`. `reposts` was explicitly
 rejected by the Instagram Media Insights endpoint for that post type.
 
-**Current integration gap:** this provider verification used explicit
-per-metric requests. `InstagramClient.get_media_insights()` currently makes a
-generic Insights request, so its compatibility with the provider's current
-per-metric shape is **Unknown**. Verify or adapt that client call before
-claiming that `runner sync` stores every metric listed above.
+**Verified 2026-08-19:** `InstagramClient.get_media_insights()` requests these
+metrics individually, aggregates the provider responses, and `sync_post()`
+stored a successful append-only snapshot for published post `12`. Unsupported
+media-type-specific metrics are retained in the raw snapshot rather than
+turning a complete sync into a false success.
 
 Do not infer readable comment content from `comments_count`. The provider can
 report a non-zero count while `/{media-id}/comments` returns an empty `data`
@@ -741,6 +746,8 @@ DEBUG=true uvicorn app.main:app --reload
 ## DOCUMENTATION
 
 ### Core Documentation Files
+
+For coding-agent task routing, start at [docs/INDEX.md](docs/INDEX.md).
 
 | File | Purpose | Audience |
 |------|---------|----------|

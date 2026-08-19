@@ -658,4 +658,4 @@ The few areas for improvement are relatively minor and don't detract from the ov
 
 ---
 
-*This review was conducted on 2026-08-11 and is based on the codebase at /Users/yannis/dev/AnnaPost*
+*This review was conducted on 2026-08-11 and is based on the codebase at /Users/yannis/dev/yTies/AnnaPost*

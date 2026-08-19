@@ -661,7 +661,11 @@ Minimal external-producer post creation (this is the contract Vend1r depends on 
 }
 ```
 
-`account_id` is optional (Phase 3 falls back to the enabled default account, or returns a clear 4xx if none exists); `scheduled_at` is optional. The API returns the internal post ID immediately — producers never see container IDs. The Phase 2 routers are registered and consistently return `501 Not Implemented` until Phase 3 wires services; their OpenAPI schemas are already the binding producer contract.
+`account_id` is optional (the service falls back to the enabled default account,
+or returns a clear 4xx if none exists); `scheduled_at` is optional. The API
+returns the internal post ID immediately — producers never see container IDs.
+The routes are implemented; their OpenAPI schemas remain the binding producer
+contract.
 
 Comment creation (`POST /posts/{id}/comments`) creates the local row + a `create_comment` job and returns immediately; it does not call Instagram synchronously inside the request unless a dedicated synchronous endpoint is deliberately added later.
 
@@ -901,4 +905,4 @@ v1 definition of done (`plan.annapost.md` §35): an external client can create a
 
 ---
 
-*This architecture reference is based on the codebase at /Users/yannis/dev/AnnaPost and was last updated on 2026-08-12*
+*This architecture reference is based on the codebase at /Users/yannis/dev/yTies/AnnaPost and was last updated on 2026-08-12*
