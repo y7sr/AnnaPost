@@ -73,3 +73,5 @@ venv.bak/
 Thumbs.db
 
 # Local development
+data/annapost.db-shm
+data/annapost.db-wal
